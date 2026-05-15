@@ -90,11 +90,28 @@ function parseRows(md, max = 10) {
       website: (websiteCell.match(/\]\((https?:\/\/[^)]+)\)/) || [])[1] || '',
       visits,
       description: desc.replace(/\|/g, '').slice(0, 180),
-      icon: `https://www.google.com/s2/favicons?domain=${encodeURIComponent(((websiteCell.match(/https?:\/\/([^/?#]+)/) || [])[1] || 'toolify.ai'))}&sz=64`,
+      icon: faviconFor(nameMatch[1], (websiteCell.match(/\]\((https?:\/\/[^)]+)\)/) || [])[1] || '', nameMatch[2]),
     });
     if (rows.length >= max) break;
   }
   return uniqueByName(rows).slice(0, max);
+}
+
+function faviconFor(name, website, toolifyUrl) {
+  const known = {
+    'claude 2': 'claude.ai', claude: 'claude.ai', 'gemini & gemini advanced': 'gemini.google.com', gemini: 'gemini.google.com', deepseek: 'deepseek.com',
+    'magnific (formerly freepik)': 'freepik.com', meshy: 'meshy.ai', janitorai: 'janitorai.com', 'spicychat ai': 'spicychat.ai', polybuzz: 'polybuzz.ai',
+    chatgpt: 'chatgpt.com', openai: 'openai.com', 'perplexity ai': 'perplexity.ai', notion: 'notion.so', 'notion ai': 'notion.so', 'remove.bg': 'remove.bg', grammarly: 'grammarly.com', capcut: 'capcut.com', quillbot: 'quillbot.com', elevenlabs: 'elevenlabs.io'
+  };
+  let domain = '';
+  try { domain = website ? new URL(website).hostname.replace(/^www\./, '') : ''; } catch {}
+  const key = String(name || '').toLowerCase().trim();
+  if (!domain || domain === 'toolify.ai') domain = known[key] || known[key.replace(/\s*\([^)]*\)\s*/g, '').trim()] || '';
+  if (!domain) {
+    const slug = String(toolifyUrl || '').split('/').filter(Boolean).pop() || key;
+    domain = `${slug.replace(/[^a-z0-9]/gi, '').toLowerCase() || 'ai'}.com`;
+  }
+  return `https://icons.duckduckgo.com/ip3/${encodeURIComponent(domain)}.ico`;
 }
 
 function fromFallbackProduct(row, idx) {
@@ -105,7 +122,7 @@ function fromFallbackProduct(row, idx) {
     website,
     visits,
     description,
-    icon: `https://www.google.com/s2/favicons?domain=${encodeURIComponent(new URL(website).hostname)}&sz=64`,
+    icon: faviconFor(name, website, toolifyUrl),
     rank: idx + 1,
   };
 }
