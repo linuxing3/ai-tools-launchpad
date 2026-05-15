@@ -1,0 +1,12 @@
+name = "ai-tools-launchpad"
+main = "src/index.ts"
+compatibility_date = "2026-05-15"
+workers_dev = true
+preview_urls = true
+
+[observability]
+enabled = true
+
+[[routes]]
+pattern = "tools.efwmcstyle.ccwu.cc"
+custom_domain = true
