@@ -1,0 +1,45 @@
+name: Hourly Toolify Data Refresh
+
+on:
+  schedule:
+    - cron: '7 * * * *'
+  workflow_dispatch:
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Refresh Toolify data
+        run: node scripts/update-toolify-data.mjs
+
+      - name: Type check
+        run: npm run check
+
+      - name: Commit updated data
+        run: |
+          if git diff --quiet src/toolify-data.ts; then
+            echo "No Toolify data changes."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/toolify-data.ts
+          git commit -m "chore: refresh Toolify market data"
+          git push
